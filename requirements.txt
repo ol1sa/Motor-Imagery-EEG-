@@ -1,0 +1,31 @@
+# Pinned for reproducibility. Tested on macOS arm64 + CPython 3.12.
+# NumPy is held <2 because the pinned PyTorch wheel is built against the
+# NumPy 1.x ABI; bumping NumPy without bumping torch breaks at import time.
+numpy==1.26.4
+scipy==1.13.1
+
+# EEG I/O, filtering, ICA, epoching, topomaps. pooch is MNE's downloader.
+mne==1.7.1
+pooch==1.8.2
+
+# Classical ML: CSP, LDA, SVM, pipelines, CV splitters, metrics.
+scikit-learn==1.4.2
+
+# Riemannian geometry pipeline (covariances -> tangent space -> LR).
+pyriemann==0.6
+
+# Deep models (EEGNet + denoising variant). CPU wheels; CUDA picked up
+# automatically on a GPU box if a matching build is installed instead.
+torch==2.2.2
+
+# Stats: Holm/Bonferroni correction for the paired model comparisons.
+statsmodels==0.14.2
+
+# Results tables, plotting, config, caching.
+pandas==2.2.2
+matplotlib==3.8.4
+PyYAML==6.0.1
+joblib==1.4.0
+
+# Dev / tests.
+pytest==8.2.2

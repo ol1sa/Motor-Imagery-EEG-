@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mibci"
+version = "0.1.0"
+description = "Subject-independent motor-imagery EEG classification on PhysioNet EEGMMIDB."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+authors = [{ name = "Olisa Ogbue" }]
+license = { text = "MIT" }
+
+# Runtime deps are pinned in requirements.txt for reproducibility; this list is
+# deliberately loose so `pip install -e .` works against an already-pinned env.
+dependencies = [
+  "numpy",
+  "scipy",
+  "mne",
+  "scikit-learn",
+  "pyriemann",
+  "torch",
+  "statsmodels",
+  "pandas",
+  "matplotlib",
+  "PyYAML",
+  "joblib",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+mibci = "mibci.run:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+# Make tests runnable from a clean checkout without relying on an editable
+# install being present/healthy.
+pythonpath = ["src"]

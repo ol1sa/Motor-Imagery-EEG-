@@ -1,0 +1,20 @@
+# Virtual env
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Project artifacts: cached epochs, results tables, figures. Reproducible from
+# code + config, so they are intentionally NOT version-controlled.
+artifacts/*
+!artifacts/.gitkeep
+
+# MNE downloads the dataset to ~/mne_data by default; never committed.
+mne_data/
+
+# OS
+.DS_Store
