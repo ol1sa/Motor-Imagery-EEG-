@@ -75,6 +75,8 @@ make test             # unit tests (offline, fast)
 make smoke            # end-to-end on ~4 subjects — proves the pipeline runs
 
 # Full benchmarks (heavy; intended for a GPU machine):
+# No GPU? Open notebooks/colab_gpu_benchmark.ipynb in Google Colab (free GPU):
+#   https://colab.research.google.com/github/ol1sa/Motor-Imagery-EEG-/blob/main/notebooks/colab_gpu_benchmark.ipynb
 make binary           # within-subject, left vs right fist imagery, 109 subjects
 make binary-loso      # subject-independent (LOSO) version
 make fourclass        # 4-class experiment
