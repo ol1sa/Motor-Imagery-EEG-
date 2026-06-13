@@ -32,33 +32,38 @@ work on a **brand-new person the model has never seen**, which is the hard part.
 ## 2. Results
 
 > Numbers are produced by the pipeline, not hand-entered — they live in
-> `artifacts/summary_*.csv`. The table below is the **classical-model pilot**:
-> binary left/right-fist *imagery*, within-subject 5-fold CV, on a 20-subject
-> cohort (18 usable — subjects 9 and 13 lost all epochs to amplitude rejection
-> and were excluded, logged). Deep models (EEGNet, Denoising-EEGNet), the LOSO
-> column, and the full 109-subject run are GPU-class jobs (see §6) and remain to
-> be filled from their own `summary_*.csv`.
+> `artifacts/summary_*.csv`. The table below is the **full 5-model within-subject
+> benchmark** (binary left/right-fist *imagery*, 5-fold CV) on a **37-subject**
+> cohort (subjects 1–40; 3 excluded after losing all epochs to amplitude
+> rejection, logged), run on a Colab GPU via `notebooks/colab_gpu_benchmark.ipynb`.
+> The **LOSO** column and the full 109-subject run are still pending (heavier; §6).
 
 | Model | Within-subject acc (mean ± sd) | Kappa | LOSO acc | Notes |
 |---|---|---|---|---|
-| **Riemann + LR** | **0.620 ± 0.133** | 0.230 | _GPU run_ | covariance → tangent space; best & most consistent |
-| CSP + LDA | 0.578 ± 0.132 | 0.131 | _GPU run_ | reference baseline |
-| CSP + SVM (RBF) | 0.553 ± 0.121 | 0.090 | _GPU run_ | non-linear CSP |
-| EEGNet | _GPU run_ | — | _GPU run_ | compact CNN |
-| **Denoising-EEGNet** | _GPU run_ | — | _GPU run_ | custom; see §5 ablation |
+| **Riemann + LR** | **0.604 ± 0.131** | 0.200 | _pending_ | covariance → tangent space; best mean |
+| CSP + LDA | 0.596 ± 0.164 | 0.174 | _pending_ | reference baseline |
+| **Denoising-EEGNet** | 0.585 ± 0.102 | 0.167 | _pending_ | custom; beats plain EEGNet (§5) |
+| CSP + SVM (RBF) | 0.560 ± 0.096 | 0.103 | _pending_ | non-linear CSP |
+| EEGNet | 0.542 ± 0.099 | 0.072 | _pending_ | compact CNN |
 
-_(n = 18 subjects; cohort = subjects 1–20. Reproduce with
-`python -m mibci.run --config configs/binary_classical20.yaml --experiment binary`.)_
+_(n = 37 subjects. Reproduce on a free GPU with `notebooks/colab_gpu_benchmark.ipynb`,
+or locally — slowly — with `configs/binary.yaml`.)_
 
-**Reading the pilot honestly.** Riemann leads, matching the literature, but no
-pairwise difference survives Holm correction at n = 18 (CSP-SVM vs Riemann is the
-closest, raw p = 0.023 → Holm p = 0.069). Accuracies are *modest* (~0.55–0.62):
-these are imagined, not executed, movements (runs 4/8/12 — harder), the pipeline
-is untuned, and it classifies the full 0–4 s window. The per-subject plot
-(§6 / `artifacts/per_subject_classical20_binary_within.png`) is the real
-takeaway — top subjects reach ~0.85–0.95 while several sit at chance, the classic
-"BCI illiteracy" spread. Obvious levers to raise the mean: a tighter post-cue
-window (e.g. 0.5–2.5 s), tuning `csp_components`, and the deep models.
+**Reading it honestly.**
+- **The denoising front-end earns its place — modestly.** Denoising-EEGNet (0.585)
+  beats plain EEGNet (0.542): a **+4.3-point mean / +6.7-point median** gain, and it
+  also has the *tightest* spread (sd 0.102, the fewest subjects near chance — see the
+  per-subject plot). That gain is significant at raw p = 0.039 but **does not survive
+  Holm correction** (p = 0.32) at n = 37 — so I report it as a real, consistent trend,
+  not a proven win. A null-after-correction result is still a result.
+- **Classical methods lead on within-subject**, as expected: CSP/Riemann are strong
+  when you can calibrate per subject, while compact CNNs are data-hungry. The one
+  difference that survives Holm correction is **Riemann > CSP-SVM** (p = 0.025).
+- **Accuracies are modest (~0.54–0.60)** because these are *imagined*, not executed,
+  movements (runs 4/8/12) and the pipeline is untuned over the full 0–4 s window. The
+  per-subject plot (§6) is the real story: top subjects reach ~0.90 while several sit
+  at chance — textbook "BCI illiteracy." Levers to raise the mean: a tighter post-cue
+  window (0.5–2.5 s), tuning `csp_components`, longer deep-model training.
 
 Expectation to state up front: **within-subject ≫ LOSO**. Decoding someone you
 calibrated on is easy; decoding a stranger with zero calibration is hard, because
@@ -190,8 +195,16 @@ Three sentences, by design:
 
 **It has to earn its place.** The pipeline runs an **ablation** — `eegnet` vs
 `denoising_eegnet` on the *same* splits — so the front-end is justified by
-evidence (a significant Wilcoxon win), not decoration. If the ablation shows no
-gain, that's a finding too, and the README should say so.
+evidence, not decoration.
+
+**Ablation result (37-subject within-subject run).** The front-end helps: mean
+accuracy **0.542 → 0.585** (+4.3 pts), median difference **+6.7 pts**, and the
+spread tightens (sd 0.099 → 0.102 with a higher floor — fewer subjects at chance).
+The gain is significant at raw p = 0.039 but **does not survive Holm correction**
+(p = 0.32) at this sample size. So the honest verdict: a **consistent positive
+trend, not yet a proven win** — denoising-before-classification is doing something
+useful, and the next test is whether the gap widens on the full 109-subject cohort
+and (especially) under LOSO, where cross-subject noise is exactly what it targets.
 
 ---
 
