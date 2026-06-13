@@ -1,0 +1,16 @@
+{
+  // Use the project's pinned virtual environment for everything.
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+
+  // Test Explorer: discover and run the unit tests with pytest.
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": ["tests"],
+
+  // Make `src/` importable in the integrated terminal so `python -m mibci.run`
+  // works without an editable install (mirrors the Makefile's PYTHONPATH=src).
+  "terminal.integrated.env.osx": { "PYTHONPATH": "src" },
+
+  "python.analysis.extraPaths": ["src"],
+  "files.exclude": { "**/__pycache__": true, "**/*.egg-info": true }
+}

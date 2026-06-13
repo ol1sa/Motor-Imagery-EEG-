@@ -31,21 +31,39 @@ work on a **brand-new person the model has never seen**, which is the hard part.
 
 ## 2. Results
 
-> Numbers are produced by the pipeline, not hand-entered. After a run, the tables
-> live in `artifacts/summary_*.csv` and the figures in `artifacts/*.png`. Paste
-> the full-cohort numbers here once you've run them on a GPU box (see §6).
+> Numbers are produced by the pipeline, not hand-entered — they live in
+> `artifacts/summary_*.csv`. The table below is the **classical-model pilot**:
+> binary left/right-fist *imagery*, within-subject 5-fold CV, on a 20-subject
+> cohort (18 usable — subjects 9 and 13 lost all epochs to amplitude rejection
+> and were excluded, logged). Deep models (EEGNet, Denoising-EEGNet), the LOSO
+> column, and the full 109-subject run are GPU-class jobs (see §6) and remain to
+> be filled from their own `summary_*.csv`.
 
-| Model | Within-subject acc | LOSO acc | Notes |
-|---|---|---|---|
-| CSP + LDA | _run to fill_ | _run to fill_ | reference baseline |
-| CSP + SVM (RBF) | _run to fill_ | _run to fill_ | non-linear CSP |
-| Riemann + LR | _run to fill_ | _run to fill_ | covariance → tangent space |
-| EEGNet | _run to fill_ | _run to fill_ | compact CNN |
-| **Denoising-EEGNet** | _run to fill_ | _run to fill_ | custom; see §5 ablation |
+| Model | Within-subject acc (mean ± sd) | Kappa | LOSO acc | Notes |
+|---|---|---|---|---|
+| **Riemann + LR** | **0.620 ± 0.133** | 0.230 | _GPU run_ | covariance → tangent space; best & most consistent |
+| CSP + LDA | 0.578 ± 0.132 | 0.131 | _GPU run_ | reference baseline |
+| CSP + SVM (RBF) | 0.553 ± 0.121 | 0.090 | _GPU run_ | non-linear CSP |
+| EEGNet | _GPU run_ | — | _GPU run_ | compact CNN |
+| **Denoising-EEGNet** | _GPU run_ | — | _GPU run_ | custom; see §5 ablation |
+
+_(n = 18 subjects; cohort = subjects 1–20. Reproduce with
+`python -m mibci.run --config configs/binary_classical20.yaml --experiment binary`.)_
+
+**Reading the pilot honestly.** Riemann leads, matching the literature, but no
+pairwise difference survives Holm correction at n = 18 (CSP-SVM vs Riemann is the
+closest, raw p = 0.023 → Holm p = 0.069). Accuracies are *modest* (~0.55–0.62):
+these are imagined, not executed, movements (runs 4/8/12 — harder), the pipeline
+is untuned, and it classifies the full 0–4 s window. The per-subject plot
+(§6 / `artifacts/per_subject_classical20_binary_within.png`) is the real
+takeaway — top subjects reach ~0.85–0.95 while several sit at chance, the classic
+"BCI illiteracy" spread. Obvious levers to raise the mean: a tighter post-cue
+window (e.g. 0.5–2.5 s), tuning `csp_components`, and the deep models.
 
 Expectation to state up front: **within-subject ≫ LOSO**. Decoding someone you
 calibrated on is easy; decoding a stranger with zero calibration is hard, because
-brains differ in anatomy and rhythm topography (see §4.3).
+brains differ in anatomy and rhythm topography (see §4.3). The smoke cohort
+already shows this ordering (LOSO < within-subject).
 
 ---
 

@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "mibci: smoke (binary, within-subject)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "mibci.run",
+      "args": ["--config", "configs/smoke.yaml", "--experiment", "binary"],
+      "cwd": "${workspaceFolder}",
+      "env": { "PYTHONPATH": "src" },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "mibci: binary LOSO (full — heavy)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "mibci.run",
+      "args": ["--config", "configs/binary.yaml", "--experiment", "binary", "--cv", "loso"],
+      "cwd": "${workspaceFolder}",
+      "env": { "PYTHONPATH": "src" },
+      "console": "integratedTerminal"
+    }
+  ]
+}

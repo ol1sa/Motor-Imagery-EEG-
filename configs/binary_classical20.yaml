@@ -1,0 +1,52 @@
+# Real (non-smoke) results on a laptop: the 3 fast classical models on a 20-subject
+# cohort, within-subject CV. Gives genuine, presentable numbers + CSP topomaps
+# without the multi-hour deep-model training. Deep models -> run on a GPU later.
+#   python -m mibci.run --config configs/binary_classical20.yaml --experiment binary
+name: classical20
+
+data:
+  subjects: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+  runs_binary: [4, 8, 12]
+  runs_fourclass: [6, 10, 14]
+  exclude_known_bad: true
+  expected_sfreq: 160.0
+
+preprocess:
+  l_freq: 8.0
+  h_freq: 30.0
+  notch_freq: 60.0
+  interpolate_bads: true
+  bad_channel_zscore: 4.0
+  apply_car: true
+
+ica:
+  enabled: true
+  n_components: 0.95
+  fit_l_freq: 1.0
+  method: fastica
+  eog_proxy_channels: [Fp1, Fp2]
+  eog_z_threshold: 3.0
+  flag_muscle: true
+  muscle_threshold: 0.6
+  max_pca_components: 25
+
+epoch:
+  tmin: -0.5
+  tmax: 4.0
+  baseline_start: -0.5
+  baseline_end: 0.0
+  reject_uv: 200.0
+
+cv:
+  scheme: within
+  within_folds: 5
+
+model:
+  names: [csp_lda, csp_svm, riemann_lr]   # classical only — fast on CPU
+  csp_components: 6
+  svm_c: 1.0
+  svm_gamma: scale
+
+seed: 42
+n_jobs: 1
+artifacts_dir: artifacts
