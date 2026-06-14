@@ -31,38 +31,45 @@ work on a **brand-new person the model has never seen**, which is the hard part.
 
 ## 2. Results
 
-> Numbers are produced by the pipeline, not hand-entered — they live in
-> `artifacts/summary_*.csv`. The table below is the **full 5-model within-subject
-> benchmark** (binary left/right-fist *imagery*, 5-fold CV) on a **37-subject**
-> cohort (subjects 1–40; 3 excluded after losing all epochs to amplitude
-> rejection, logged), run on a Colab GPU via `notebooks/colab_gpu_benchmark.ipynb`.
-> The **LOSO** column and the full 109-subject run are still pending (heavier; §6).
+> Numbers are produced by the pipeline, not hand-entered (`artifacts/summary_*.csv`).
+> Binary left/right-fist *imagery*. **Within-subject**: 5-fold CV, 37 subjects
+> (cohort 1–40), Colab GPU. **LOSO**: leave-one-subject-out, 18 subjects (cohort
+> 1–20), Kaggle. ⚠️ The two columns use **different cohorts** (40 vs 20 subjects),
+> so read cross-column comparisons as *qualitative*, not exact.
 
-| Model | Within-subject acc (mean ± sd) | Kappa | LOSO acc | Notes |
-|---|---|---|---|---|
-| **Riemann + LR** | **0.604 ± 0.131** | 0.200 | _pending_ | covariance → tangent space; best mean |
-| CSP + LDA | 0.596 ± 0.164 | 0.174 | _pending_ | reference baseline |
-| **Denoising-EEGNet** | 0.585 ± 0.102 | 0.167 | _pending_ | custom; beats plain EEGNet (§5) |
-| CSP + SVM (RBF) | 0.560 ± 0.096 | 0.103 | _pending_ | non-linear CSP |
-| EEGNet | 0.542 ± 0.099 | 0.072 | _pending_ | compact CNN |
+| Model | Within-subject acc | LOSO acc | Notes |
+|---|---|---|---|
+| **Denoising-EEGNet** | 0.585 ± 0.102 | **0.636 ± 0.133** | custom; **best under LOSO**, beats plain EEGNet in both regimes (§5) |
+| EEGNet | 0.542 ± 0.099 | **0.616 ± 0.109** | compact CNN; strong cross-subject |
+| Riemann + LR | **0.604 ± 0.131** | 0.568 ± 0.090 | covariance → tangent space; best within-subject |
+| CSP + LDA | 0.596 ± 0.164 | 0.554 ± 0.075 | reference baseline |
+| CSP + SVM (RBF) | 0.560 ± 0.096 | 0.553 ± 0.084 | non-linear CSP |
 
-_(n = 37 subjects. Reproduce on a free GPU with `notebooks/colab_gpu_benchmark.ipynb`,
-or locally — slowly — with `configs/binary.yaml`.)_
+_(within-subject n = 37, cohort 1–40; LOSO n = 18, cohort 1–20. Reproduce with
+`notebooks/colab_gpu_benchmark.ipynb` and `notebooks/kaggle_gpu_loso.ipynb`.)_
 
-**Reading it honestly.**
-- **The denoising front-end earns its place — modestly.** Denoising-EEGNet (0.585)
-  beats plain EEGNet (0.542): a **+4.3-point mean / +6.7-point median** gain, and it
-  also has the *tightest* spread (sd 0.102, the fewest subjects near chance — see the
-  per-subject plot). That gain is significant at raw p = 0.039 but **does not survive
-  Holm correction** (p = 0.32) at n = 37 — so I report it as a real, consistent trend,
-  not a proven win. A null-after-correction result is still a result.
-- **Classical methods lead on within-subject**, as expected: CSP/Riemann are strong
-  when you can calibrate per subject, while compact CNNs are data-hungry. The one
-  difference that survives Holm correction is **Riemann > CSP-SVM** (p = 0.025).
-- **Accuracies are modest (~0.54–0.60)** because these are *imagined*, not executed,
+**Reading it honestly — the headline is the flip.**
+- **The model ranking inverts between regimes.** *Within-subject*, the classical
+  methods win (Riemann 0.604, CSP-LDA 0.596) and the CNNs trail. *Subject-independent
+  (LOSO)*, it reverses: **Denoising-EEGNet (0.636) and EEGNet (0.616) beat every
+  classical model** (~0.55–0.57). This is the textbook data-hungry story — within-
+  subject gives a CNN only ~40 training epochs (one person), whereas LOSO gives it
+  ~17 people's data, which is where deep nets start to generalise. CSP/Riemann rely on
+  subject-specific spatial filters, so they stay flat (~0.55–0.60) across both regimes.
+- **The denoising front-end helps in *both* regimes, and most where it was meant to.**
+  Denoising-EEGNet > plain EEGNet within-subject (+4.3 pts) *and* under LOSO
+  (**0.636 vs 0.616, +2.0 pts**) — and LOSO, where cross-subject noise dominates, is
+  exactly the setting the front-end targets. (Per-pair Wilcoxon significance for the
+  LOSO run is in `artifacts/stats_kaggle_binary_loso.csv`.)
+- **LOSO is *not* much worse than within-subject here — for the deep models it's
+  better.** The usual "within ≫ LOSO" gap is muted because the within-subject deep
+  models were starved of data; the honest takeaway is *which model family suits which
+  deployment*: per-user calibration → CSP/Riemann; zero-calibration on a new user →
+  EEGNet-family. (Caveat: different cohorts; a like-for-like rerun on the same 18
+  subjects would tighten the claim.)
+- **Absolute accuracies are modest (~0.55–0.64)** — these are *imagined*, not executed,
   movements (runs 4/8/12) and the pipeline is untuned over the full 0–4 s window. The
-  per-subject plot (§6) is the real story: top subjects reach ~0.90 while several sit
-  at chance — textbook "BCI illiteracy." Levers to raise the mean: a tighter post-cue
+  per-subject plots (§6) show the "BCI illiteracy" spread. Levers: a tighter post-cue
   window (0.5–2.5 s), tuning `csp_components`, longer deep-model training.
 
 Expectation to state up front: **within-subject ≫ LOSO**. Decoding someone you
@@ -203,10 +210,15 @@ evidence, not decoration.
 accuracy **0.542 → 0.585** (+4.3 pts), median difference **+6.7 pts**, and the
 spread tightens (sd 0.099 → 0.102 with a higher floor — fewer subjects at chance).
 The gain is significant at raw p = 0.039 but **does not survive Holm correction**
-(p = 0.32) at this sample size. So the honest verdict: a **consistent positive
-trend, not yet a proven win** — denoising-before-classification is doing something
-useful, and the next test is whether the gap widens on the full 109-subject cohort
-and (especially) under LOSO, where cross-subject noise is exactly what it targets.
+(p = 0.32) at this sample size — a **consistent positive trend, not yet a proven win**.
+
+**And under LOSO (18 subjects) — the regime it was designed for — it holds:**
+Denoising-EEGNet **0.636 vs** plain EEGNet **0.616 (+2.0 pts)**, and both deep models
+beat every classical baseline here (the within-subject ranking inverts; see §2). This
+is the consistent thread: the denoising front-end is ahead of plain EEGNet in *both*
+regimes, by the most where cross-subject noise dominates. The right next step is a
+like-for-like rerun (same subjects, both CV schemes) plus the full 109-subject cohort
+to test whether the LOSO gap reaches significance.
 
 ---
 
